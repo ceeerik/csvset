@@ -11,16 +11,16 @@ Used to perform set operations on csv files.
 
 ## operands
 
-- "**+**" - union
+- `+` - union
   - Returns all members in any set.
   - Can be chained.
-- "**\***" - intersection
+- `*` - intersection
   - Returns members that are in all sets only.
   - Can be chained.
-- "**-**" - set difference
+- `-` - set difference
   - Returns members of the first set that are not in any of the other sets.
   - Can be chained.
-- "**/**" - symmetric difference
+- `/` - symmetric difference
   - Returns members that belong to one, and only one, set.
   - Can be chained.
 

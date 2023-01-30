@@ -29,11 +29,13 @@ const (
 	inputFlagName   = "input"
 	outputFlagName  = "output"
 	formulaFlagName = "formula"
+
+	outputFlagDefaultValue = "output.csv"
 )
 
 func init() {
 	rootCommand.Flags().String(inputFlagName, "", "The filenames of the input files.")
-	rootCommand.Flags().String(outputFlagName, "output.csv", "The Filename of the output file.")
+	rootCommand.Flags().String(outputFlagName, outputFlagDefaultValue, "The Filename of the output file.")
 	rootCommand.Flags().String(formulaFlagName, "", "The formula.")
 }
 
@@ -47,57 +49,77 @@ var (
 			flags := cmd.NonInheritedFlags()
 
 			// Read input flag
+			fmt.Printf("Reading %s flag...\n", inputFlagName)
 			inputFlagStringValue, err := flags.GetString(inputFlagName)
 			if err != nil {
-				fmt.Printf("Couldn't read %s flag.", inputFlagName)
+				fmt.Printf("Couldn't read %s flag.\n", inputFlagName)
 				return
 			}
 			if inputFlagStringValue == "" {
-				fmt.Printf("\"%s\" flag not included.", inputFlagName)
+				fmt.Printf("\"%s\" flag not included.\n", inputFlagName)
 				return
 			}
 			inputFilenames := strings.Split(inputFlagStringValue, ",")
+			fmt.Printf("Successfully read %s flag: %+v\n", inputFlagName, inputFilenames)
 
 			// Read output flag
+			fmt.Printf("Reading %s flag...\n", outputFlagName)
 			outputFilename, err := flags.GetString(outputFlagName)
 			if err != nil {
-				fmt.Printf("Couldn't read %s flag.", outputFlagName)
+				fmt.Printf("Couldn't read %s flag.\n", outputFlagName)
 				return
 			}
-			fmt.Printf("\"%s\" flag not specified, set to %s by default.", outputFlagName, outputFilename)
+			if outputFilename == outputFlagDefaultValue {
+				fmt.Printf("\"%s\" flag not specified, set to %s by default.\n", outputFlagName, outputFlagDefaultValue)
+			} else {
+				fmt.Printf("Successfully read %s flag: %s\n", outputFlagName, outputFilename)
+			}
 
 			// Read formula flag
+			fmt.Printf("Reading %s flag...\n", formulaFlagName)
 			formula, err := flags.GetString(formulaFlagName)
 			if err != nil {
-				fmt.Printf("Couldn't read %s flag.", formulaFlagName)
+				fmt.Printf("Couldn't read %s flag.\n", formulaFlagName)
 				return
 			}
 			if formula == "" {
-				fmt.Printf("\"%s\" flag not included.", formulaFlagName)
+				fmt.Printf("\"%s\" flag not included.\n", formulaFlagName)
 				return
+			} else {
+				fmt.Printf("Successfully read %s flag: %s\n", formulaFlagName, formula)
 			}
 
 			// Read input files
+			fmt.Printf("Reading input files %+v...\n", inputFilenames)
 			inputs, err := ReadCSVs(inputFilenames)
 			if err != nil {
 				fmt.Println(err)
+				return
+			} else {
+				fmt.Printf("Successfully read input files.\n")
 			}
 
 			// TODO: Make basic checks for number of parentheses?
 
 			// Perform operations
+			fmt.Printf("Performing operations...\n")
 			operation := NewOperation(&inputs, &Operands, nil, formula)
 			err = operation.Execute()
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
+			fmt.Printf("Operations successfully completed.\n")
 
 			// Create and write to output file
+			fmt.Printf("Writing result to file \"%s\"...\n", outputFilename)
 			DumpCSV(outputFilename, operation.Result)
 			if err != nil {
 				fmt.Println(err)
+				return
 			}
+			fmt.Printf("Output successfully written to file.\n")
+			fmt.Printf("Exiting...\n")
 		},
 	}
 )
@@ -175,6 +197,7 @@ func NewOperation(valueLists *[][]string, operands *OperandCollection, operand *
 
 func (op *Operation) Execute() error {
 	// If StringOperation only contains a number, set that ValueList as result and return.
+	op.Printf("resolve-check")
 	if digitCheck.MatchString(op.StringOperation) {
 		index, _ := strconv.Atoi(op.StringOperation)
 		op.Result = (*op.ValueLists)[index]
@@ -182,18 +205,24 @@ func (op *Operation) Execute() error {
 	}
 
 	// Attempt to split StringOperation into terms and operands.
+	op.Printf("split")
 	terms, operand, err := Operands.SplitStringByOperands(op.StringOperation)
 	if err != nil {
 		return op.Errorf("Failed to split string:\n%v", err)
 	}
 	// No terms were found.
+	op.Printf("term-check")
 	if len(terms) == 0 {
 		return op.Errorf("No terms found in string:\n%s", op.StringOperation)
 	}
 	// No operand was found, it may have been a simple term surrounded by parentheses.
+	op.Printf("operand-check")
 	if operand == nil {
+		op.Printf("length-check")
 		if len(terms) == 1 {
+			op.Printf("term-zero")
 			term := terms[0]
+			op.Printf("resolve-check")
 			if digitCheck.MatchString(term) {
 				index, _ := strconv.Atoi(term)
 				// Index term was out of bounds.
@@ -230,10 +259,15 @@ func (op *Operation) Execute() error {
 
 func (op *Operation) Errorf(str string, args ...interface{}) error {
 	if str == "" {
-		return fmt.Errorf("Error in operation:\n%s", op.StringOperation)
+		return fmt.Errorf("Error in operation: \"%s\"", op.StringOperation)
 	}
-	baseString := fmt.Sprintf("Error in operation:\n%s\n", op.StringOperation)
-	return fmt.Errorf(baseString+"Details:\n"+str, args...)
+	baseString := fmt.Sprintf("Error in operation: \"%s\"\n", op.StringOperation)
+	return fmt.Errorf(baseString+"Details: "+str+"\n", args...)
+}
+
+func (op *Operation) Printf(str string, args ...interface{}) {
+	baseString := fmt.Sprintf("Operation \"%s\": ", op.StringOperation)
+	fmt.Printf(baseString+str+"\n", args...)
 }
 
 func (op *Operation) GetResults() [][]string {
@@ -245,8 +279,7 @@ func (op *Operation) GetResults() [][]string {
 }
 
 func GetFirstNumberFromStringAsString(inStr string) (outStr string, i int) {
-	// TODO: check to ensure there are no index errors
-	for digitCheck.MatchString(string(inStr[i])) {
+	for i < len(inStr) && digitCheck.MatchString(string(inStr[i])) {
 		outStr += string(inStr[i])
 		i++
 	}
@@ -280,6 +313,7 @@ type OperandCollection map[string]Operand
 
 func (opc OperandCollection) SplitStringByOperands(str string) (terms []string, opd *Operand, err error) {
 	for len(str) > 0 {
+		fmt.Printf("Splitting \"%s\"...\n", str)
 		// Attempt to extract ta number starting at the beginning of the string
 		// append the number to terms and continue with the next iteration.
 		// If a number is found add it to terms and continue the loop.
@@ -305,6 +339,9 @@ func (opc OperandCollection) SplitStringByOperands(str string) (terms []string, 
 			}
 
 			// If it's the first operand or the same as the current one, set the op var and continue the loop.
+			if opd == nil {
+				opd = new(Operand)
+			}
 			*opd = opc[char]
 			if len(str)-1 < 1 {
 				return
@@ -317,7 +354,7 @@ func (opc OperandCollection) SplitStringByOperands(str string) (terms []string, 
 		// and save the parenthesed string as a new term (without the parentheses).
 		if char == "(" {
 			parts := 1
-			index := 0
+			index := 1
 			for parts != 0 {
 				indexChar := string(str[index])
 				if indexChar == "(" {
@@ -328,11 +365,11 @@ func (opc OperandCollection) SplitStringByOperands(str string) (terms []string, 
 				index++
 			}
 			// Add to terms, excluding parentheses, and continue the loop.
-			terms = append(terms, str[1:index])
+			terms = append(terms, str[1:index-1])
 			if len(str)-1 < index+1 {
 				return
 			}
-			str = str[index+1:]
+			str = str[index:]
 			continue
 		}
 	}
