@@ -479,18 +479,19 @@ func stringsInAllSlices(stringSlices ...[]string) []string {
 		stringMaps = append(stringMaps, stringSliceToMap(stringSlice))
 	}
 
-	result := make([]string, 0)
+	result := make(map[string]bool, 0)
 
-	for string := range stringMaps[0] {
+	for str := range stringMaps[0] {
 		for _, stringMap := range stringMaps[1:] {
-			if _, ok := stringMap[string]; !ok {
-				break
+			if _, ok := stringMap[str]; !ok {
+				result[str] = false
+			} else {
+				result[str] = true
 			}
-			result = append(result, string)
 		}
 	}
 
-	return result
+	return mapToStringSlice(result)
 }
 
 func uniqueStrings(stringSlices ...[]string) []string {
