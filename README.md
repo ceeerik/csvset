@@ -46,8 +46,8 @@ There's no operation priority so only the one kind of operation can be performed
 
 Example:
 
-`(1+2+3+(4/5/6))-7-8`
+`(1+2+3+(4/5/6))-7-0`
 
 ## full example
 
-`csvset --input a.csv,b.csv,c.csv --output test.csv --formula "0+1+2/(2-0)"`
+`csvset --input a.csv,b.csv,c.csv --output test.csv --formula "(0+1+2)/(2-0)"`
