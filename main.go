@@ -450,16 +450,13 @@ func stringsInOnlyOneSlice(stringSlices ...[]string) []string {
 
 	resultMap := make(map[string]bool)
 
-	for i := 0; i < len(stringMaps)-1; i++ {
-		for str := range stringMaps[i] {
-			for _, stringMap := range stringMaps[i+1:] {
-				_, sOK := stringMap[str]
-				_, rOK := resultMap[str]
-				if !sOK && !rOK {
-					resultMap[str] = true
-				} else {
-					resultMap[str] = false
-				}
+	for _, stringMap := range stringMaps {
+		for str, _ := range stringMap {
+			_, ok := resultMap[str]
+			if ok {
+				resultMap[str] = false
+			} else {
+				resultMap[str] = true
 			}
 		}
 	}
@@ -480,19 +477,19 @@ func stringsInAllSlices(stringSlices ...[]string) []string {
 		stringMaps = append(stringMaps, stringSliceToMap(stringSlice))
 	}
 
-	result := make(map[string]bool, 0)
+	resultMap := make(map[string]bool, 0)
 
 	for str := range stringMaps[0] {
 		for _, stringMap := range stringMaps[1:] {
 			if _, ok := stringMap[str]; !ok {
-				result[str] = false
+				resultMap[str] = false
 			} else {
-				result[str] = true
+				resultMap[str] = true
 			}
 		}
 	}
 
-	return mapToStringSlice(result)
+	return mapToStringSlice(resultMap)
 }
 
 func uniqueStrings(stringSlices ...[]string) []string {
