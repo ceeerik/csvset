@@ -45,7 +45,9 @@ var (
 		Short: "test1", // TODO: set short
 		Long:  `test2`, // TODO: set long
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO: Makefile
+
+			fmt.Printf(cmd.Root().Use + " version 1.0.0\n")
+
 			flags := cmd.NonInheritedFlags()
 
 			// Read input flag
