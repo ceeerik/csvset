@@ -42,8 +42,8 @@ func init() {
 var (
 	rootCommand = &cobra.Command{
 		Use:   "csvset",
-		Short: "test1", // TODO: set short
-		Long:  `test2`, // TODO: set long
+		Short: "Used to perform set operations on csv files.", // TODO: set short
+		Long:  `See README.md `,                               // TODO: set long
 		Run: func(cmd *cobra.Command, args []string) {
 
 			fmt.Printf(cmd.Root().Use + " version 1.0.0\n")
