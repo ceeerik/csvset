@@ -429,7 +429,8 @@ func stringsInOnlyFirstSlice(stringSlices ...[]string) []string {
 	for str := range stringMaps[0] {
 		for _, stringMap := range stringMaps[1:] {
 			_, sOK := stringMap[str]
-			if sOK {
+			_, rOK := resultMap[str]
+			if sOK || (rOK && resultMap[str] == false) {
 				resultMap[str] = false
 			} else {
 				resultMap[str] = true
